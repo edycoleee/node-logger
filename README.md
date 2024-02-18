@@ -211,8 +211,57 @@ jalankan test
 npx jest request.test.js
 
 4. Request
+```
+app.get('/req-http', (req, res) => {
+    res.send(`Hello ${req.query.name}`);
+});
+```
 
-5. Request Query Param
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Query Parameter", async () => {
+    const response = await request(app).get("/req-http").query({ name: "Edy" });
+    expect(response.text).toBe("Hello Edy");
+});
+
+//npx jest request-http.test.js
+```
+
+5. Request URL 
+
+```
+app.get('/req-url/world', (req, res) => {
+    res.json({
+        path: req.path,
+        originalUrl: req.originalUrl,
+        hostname: req.hostname,
+        protocol: req.protocol,
+        secure: req.secure,
+    })
+});
+```
+
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Request URL", async () => {
+    const response = await request(app)
+        .get("/req-url/world")
+        .query({ name: "Edy" });
+    expect(response.body).toEqual({
+        path: "/req-url/world",
+        originalUrl: "/req-url/world?name=Edy",
+        hostname: "127.0.0.1",
+        protocol: "http",
+        secure: false,
+    });
+});
+```
+
+6. Request Query Param
 
 6. Request Header
 
