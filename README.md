@@ -20,6 +20,7 @@ npm install jest --save-dev
 npm install babel-jest --save-dev
 npm install @babel/preset-env --save-dev
 npm install @babel/plugin-transform-runtime  --save-dev
+npm install supertest --save-dev
 
 npm install winston winston-daily-rotate-file
 
@@ -87,4 +88,138 @@ Logging adalah aksi menambah informasi log ke log file
 Logging sudah menjadi standard industri untuk menampilkan informasi yang terjadi di aplikasi yang kita buat
 Logging bukan hanya untuk menampilkan informasi, kadang digunakan untuk proses debugging ketika terjadi masalah di aplikasi kita
 
-3. Express JS
+## Express JS
+
+1. Application
+
+Saat kita membuat web menggunakan ExpressJS, kita akan membuat object Application
+Application adalah object utama dalam library ExpressJS
+
+```
+import express from "express";
+
+const app = express();
+
+```
+
+Menjalankan Application
+
+Application secara default tidak berjalan, jika kita ingin menjalankan Application nya, kita perlu menggunakan method listen(port)
+
+```
+import express from "express";
+
+const app = express();
+
+app.listen(3000, () => {
+    console.info("Server started on port 3000");
+});
+```
+
+Menggunakan module nodemon agar tidak perlu restart server selama masa dev
+```
+npm install --save-dev nodemon
+
+\\package.json
+  "scripts": {
+    "start": "node ./src/index.js",
+    "dev": "nodemon ./src/index.js"
+  },
+```
+npm run dev
+
+2. Routing
+
+Routing merupakan teknik yang digunakan untuk meneruskan request dari URL Path ke callback yang kita tuju
+Routing di ExpressJS bisa menggunakan object Application, dan menggunakan method sesuai dengan nama HTTP Method nya
+
+
+app.connect(path, callback)
+app.get(path, callback)
+app.post(path, callback)
+app.put(path, callback)
+app.delete(path, callback)
+
+```
+import express from "express";
+
+const app = express();
+
+app.get('/', (req, res) => {
+    res.send("Hello World");
+});
+
+app.get('/edy', (req, res) => {
+    res.send("Hello Edy");
+});
+
+app.listen(3000, () => {
+    console.info("Server started on port 3000");
+});
+```
+
+3. Unit Test
+
+Salah satu yang sulit ketika membuat aplikasi web yang harus berjalan yaitu melakukan automation test
+Jika melakukan manual test, terlihat mudah tinggal kita buka melalui web browser
+
+Supertest adalah salah satu library yang bisa digunakan untuk membantu melakukan pengetesan web ExpressJS
+
+```
+npm install supertest --save-dev
+```
+
+Contoh Test
+```
+//src/index.js
+import express from "express";
+
+export const app = express();
+
+app.get('/', (req, res) => {
+    res.send("Hello World");
+});
+
+app.get('/edy', (req, res) => {
+    res.send("Hello Edy");
+});
+
+//app.listen(3000, () => {
+//    console.info("Server started on port 3000");
+//});
+```
+
+```
+//test/request.test.js
+//import express from "express";
+import request from "supertest";
+import { app } from "../src/index.js";
+
+// const app = express();
+
+// app.get('/', (req, res) => {
+//     res.send("Hello World");
+// });
+
+test("Test ExpressJS", async () => {
+    const response = await request(app).get("/");
+    expect(response.text).toBe("Hello World");
+});
+```
+jalankan test
+
+npx jest request.test.js
+
+4. Request
+
+5. Request Query Param
+
+6. Request Header
+
+7. Response
+
+8. Response Status
+
+
+9. 
+
