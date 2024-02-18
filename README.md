@@ -8,7 +8,7 @@ repository
 https://github.com/edycoleee/node-logger.git
 echo "# node-logger" >> README.md
 git init
-git add README.md
+git add .
 git commit -m "first commit"
 git branch -M main
 git remote add origin https://github.com/edycoleee/node-logger.git
@@ -78,4 +78,12 @@ coverage
 *.log
 
 ```
+
+2. Logging
+
+Log file adalah file yang berisikan informasi kejadian dari sebuah sistem
+Biasanya dalam log file, terdapat informasi waktu kejadian dan pesan kejadian
+Logging adalah aksi menambah informasi log ke log file
+Logging sudah menjadi standard industri untuk menampilkan informasi yang terjadi di aplikasi yang kita buat
+Logging bukan hanya untuk menampilkan informasi, kadang digunakan untuk proses debugging ketika terjadi masalah di aplikasi kita
 
