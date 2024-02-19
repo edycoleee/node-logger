@@ -263,11 +263,83 @@ test("Test Request URL", async () => {
 
 6. Request Query Param
 
-6. Request Header
+Request juga bisa digunakan untuk mengambil data query parameter
+Secara otomatis, semua query parameter akan disimpan dalam bentuk object di req.query
 
-7. Response
+```
+import express from "express";
+import request from "supertest";
 
-8. Response Status
+const app = express();
+
+app.get('/', (req, res) => {
+    res.send(`Hello ${req.query.firstName} ${req.query.lastName}`);
+});
+
+//http://localhost:3000/user?firstName=Edy&lastName=Cole
+
+test("Test Query Parameter", async () => {
+    const response = await request(app)
+        .get("/")
+        .query({ firstName: "Edy" , lastName: "Cole"});
+    expect(response.text).toBe("Hello Eko Khannedy");
+});
+```
+
+7. Request Header
+case insensitive
+Object Request juga bisa kita gunakan untuk mendapatkan informasi dari HTTP Header dari Request
+Kita bisa menggunakan method req.get(name) atau req.header(name) untuk mendapatkan header berdasarkan name, khusus untuk HTTP Header, name nya adalah case insensitive
+
+Menggunakan req.get('key-header')
+
+```
+import express from "express";
+import request from "supertest";
+
+const app = express();
+
+app.get('/', (req, res) => {
+    const type = req.get("accept");
+    res.send(`Hello ${type}`);
+});
+
+test("Test Query Parameter", async () => {
+    const response = await request(app).get("/")
+        .set("Accept", "text/plain");
+    expect(response.text).toBe("Hello text/plain");
+});
+```
+
+Menggunakan req.headers['key-header']
+```
+// Route untuk menangani permintaan POST
+app.post('/submit-data', (req, res) => {
+  // Mendapatkan nilai header 'x-custom-header' dari permintaan
+  const customHeaderValue = req.headers['x-custom-header'];
+
+  // Melakukan sesuatu dengan nilai header yang diterima
+  console.log('Nilai x-custom-header:', customHeaderValue);
+
+  // Menanggapi kembali dengan status sukses dan pesan
+  res.status(200).send('Data telah diterima!');
+});
+```
+
+Saat menggunakan rest client extension vs code
+```
+POST https://example.com/comments HTTP/1.1
+content-type: application/json
+
+{
+    "name": "sample",
+    "time": "Wed, 21 Oct"
+}
+```
+
+8. Response
+
+9. Response Status
 
 
 9. 
