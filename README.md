@@ -267,22 +267,24 @@ Request juga bisa digunakan untuk mengambil data query parameter
 Secara otomatis, semua query parameter akan disimpan dalam bentuk object di req.query
 
 ```
-import express from "express";
-import request from "supertest";
-
-const app = express();
-
-app.get('/', (req, res) => {
+app.get('/req-par', (req, res) => {
     res.send(`Hello ${req.query.firstName} ${req.query.lastName}`);
-});
+    console.log(req.query)
+})
+```
 
-//http://localhost:3000/user?firstName=Edy&lastName=Cole
+```
+//http://localhost:3000/req-par?firstName=Edy&lastName=Cole
+
+import request from "supertest";
+import { app } from "../src/index.js";
+
 
 test("Test Query Parameter", async () => {
     const response = await request(app)
-        .get("/")
+        .get("/req-par")
         .query({ firstName: "Edy" , lastName: "Cole"});
-    expect(response.text).toBe("Hello Eko Khannedy");
+    expect(response.text).toBe("Hello Edy Cole");
 });
 ```
 
@@ -339,8 +341,289 @@ content-type: application/json
 
 8. Response
 
+Pada Callback Routing ExpressJS, terdapat parameter kedua yaitu response
+Response merupakan object representasi dari HTTP Response
+Kita bisa mengubah data HTTP Response melalui object Response tersebut
+
+```
+app.get('/resp', (req, res) => {
+    res.send(`Hello Response`);
+});
+```
+
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Response"), async() => {
+  const response = await request(app).get("/resp");
+  expect(response.text).toBe("Hello Response");
+}
+```
+
 9. Response Status
 
+Saat kita ingin mengubah HTTP Status dari HTTP Response yang kita buat, kita bisa menggunakan method res.status(code)
 
-9. 
+```
+app.get('/resp-status', (req, res) => {
+    if(req.query.name){
+        res.status(200);
+        res.send(`Hello ${req.query.name}`);
+    }else{
+        res.status(400);
+        res.end();
+    }
+});
+```
 
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Response Status", async () => {
+    let response = await request(app).get("/resp-status").query({name: "Edy"});
+    expect(response.status).toBe(200);
+    expect(response.text).toBe("Hello Edy");
+
+    response = await request(app).get("/resp-status");
+    expect(response.status).toBe(400);
+});
+```
+
+9. Response Header
+
+Kita juga bisa mengubah HTTP Response Header dengan menggunakan method res.set(name, value) atau res.header(name, value)
+Atau jika ingin langsung beberapa name, kita bisa masukkan dalam bentuk object ke dalam parameter name nya
+
+```
+app.get('/resp-header', (req, res) => {
+    res.set({
+        "X-Powered-By": "Coding Cupu",
+        "X-Author": "Edy"
+    });
+    res.send(`Hello Response`);
+});
+```
+
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Response Header", async () => {
+    const response = await request(app).get("/resp-header");
+    expect(response.text).toBe("Hello Response");
+    expect(response.get("X-Powered-By")).toBe("Coding Cupu");
+    expect(response.get("X-Author")).toBe("Edy");
+});
+```
+
+10. Response Body
+
+Untuk mengubah Response Body, kita bisa menggunakan method res.send(body)
+Dimana parameter body bisa kita kirim dalam bentuk buffer atau string, baik itu text, html, json dan lain-lain
+
+```
+app.get('/resp-body', (req, res) => {
+    res.set('Content-Type', 'text/html');
+    res.send(`<html><body>Hello World</body></html>`);
+});
+```
+
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Response Body", async () => {
+    const response = await request(app).get("/resp-body");
+    expect(response.get('Content-Type')).toContain('text/html');
+    expect(response.text).toBe('<html><body>Hello World</body></html>');
+});
+```
+
+11. Redirect
+
+Seperti yang pernah dijelaskan di kelas HTTP, untuk melakukan Redirect dari sebuah web ke halaman lain, kita hanya cukup menggunakan HTTP Header Location
+Di ExpressJS, kita bisa lakukan manual dengan menggunakan HTTP Header Location, atau bisa dengan bantuan method res.redirect(to)
+
+```
+app.get('/resp-redir', (req, res) => {
+    res.redirect('/to-next-page');
+});
+```
+
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Response Body", async () => {
+    const response = await request(app).get("/resp-body");
+    expect(response.get('Content-Type')).toContain('text/html');
+    expect(response.text).toBe('<html><body>Hello World</body></html>');
+});
+```
+
+12. Middleware
+
+Middleware adalah function yang bisa digunakan untuk mengakses request object, response object dan next function dalam alur hidup aplikasi ExpressJS
+Jika Middleware memanggil next function, artinya function Middleware selanjutnya atau Router akan dieksekusi
+
+
+Ada banyak sekali kegunaan dari Middleware, seperti
+Eksekusi kode sebelum sebelum router di eksekusi
+Mengubah Request atau Response object sebelum router di eksekusi
+Mengakhiri response tanpa harus mengeksekusi router
+Dan lain-lain
+
+
+Untuk membuat middleware, kita cukup membuat function dengan 3 parameter, request, response dan next
+request adalah request object
+response adalah response object
+next adalah next function, bisa middleware selanjutnya atau router
+
+A. Contoh 1 Middlware tanpa router
+
+request >> next >> next
+
+```
+import express from "express";
+
+const logger = (req, res, next) => {
+    console.info(`Receive request: ${req.method} ${req.originalUrl}`);
+    next();
+};
+
+const addPoweredHeader = (req, res, next) => {
+    res.set("X-Powered-By", "Coding Ndeso");
+    next();
+};
+
+
+export const app = express();
+
+app.use(logger);
+app.use(addPoweredHeader);
+
+app.get('/', (req, res) => {
+    res.send("Hello Response");
+});
+
+// console.info Receive request: GET /
+
+```
+
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Middleware 1", async() => {
+    const response = await request(app).get("/");
+    expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
+    expect(response.text).toBe("Hello Response");
+})
+```
+
+B. Contoh 2 Middlware tanpa router
+
+```
+import express from "express";
+
+const logger = (req, res, next) => {
+    console.info(`Receive request: ${req.method} ${req.originalUrl}`);
+    next();
+};
+
+const addPoweredHeader = (req, res, next) => {
+    res.set("X-Powered-By", "Coding Ndeso");
+    next();
+};
+
+
+export const app = express();
+
+app.use(logger);
+app.use(addPoweredHeader);
+
+app.get('/', (req, res) => {
+    res.send("Hello Response");
+});
+
+app.get('/mid1', (req, res) => {
+    res.send("Hello Middleware2");
+});
+```
+
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test("Test Middleware 2", async() => {
+    const response = await request(app).get("/mid1");
+    expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
+    expect(response.text).toBe("Hello Middleware2");
+})
+```
+C. Contoh 2 Middlware Api Key Middleware
+
+```
+import express from "express";
+
+const logger = (req, res, next) => {
+    console.info(`Receive request: ${req.method} ${req.originalUrl}`);
+    next();
+};
+
+const addPoweredHeader = (req, res, next) => {
+    res.set("X-Powered-By", "Coding Ndeso");
+    next();
+};
+
+const apiKeyMiddleware = (req, res, next) => {
+    if(req.query.apiKey){
+        next();
+    }else{
+        res.status(401).end();
+    }
+};
+
+export const app = express();
+
+app.use(logger);
+app.use(addPoweredHeader);
+app.use(apiKeyMiddleware);
+
+app.get('/mid3', (req, res) => {
+    res.send("Hello Middleware3");
+});
+```
+
+```
+import request from "supertest";
+import { app } from "../src/index.js";
+
+test.skip("Test Middleware 1", async() => {
+    const response = await request(app).get("/");
+    expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
+    expect(response.text).toBe("Hello Response");
+})
+
+test("Test Middleware 2", async() => {
+    const response = await request(app).get("/mid1");
+    expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
+    expect(response.status).toBe(401)
+    if (response.status === 401) {
+        expect(response.text).toBe("");
+    } else {
+        expect(response.text).toBe("Hello Middleware2");
+    }
+})
+
+test("Test Response Middleware 3", async () => {
+    const response = await request(app).get("/mid3").query({apiKey: "123"});
+    expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
+    e
+```
+
+D. 
+
+13. 
