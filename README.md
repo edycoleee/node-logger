@@ -1,6 +1,6 @@
-## Belajar Node Logging 
+## Belajar Node Logging
 
-1. Persiapan 
+1. Persiapan
 
 ```
 //Membuat Repo di github
@@ -117,6 +117,7 @@ app.listen(3000, () => {
 ```
 
 Menggunakan module nodemon agar tidak perlu restart server selama masa dev
+
 ```
 npm install --save-dev nodemon
 
@@ -126,13 +127,13 @@ npm install --save-dev nodemon
     "dev": "nodemon ./src/index.js"
   },
 ```
+
 npm run dev
 
 2. Routing
 
 Routing merupakan teknik yang digunakan untuk meneruskan request dari URL Path ke callback yang kita tuju
 Routing di ExpressJS bisa menggunakan object Application, dan menggunakan method sesuai dengan nama HTTP Method nya
-
 
 app.connect(path, callback)
 app.get(path, callback)
@@ -170,6 +171,7 @@ npm install supertest --save-dev
 ```
 
 Contoh Test
+
 ```
 //src/index.js
 import express from "express";
@@ -206,11 +208,13 @@ test("Test ExpressJS", async () => {
     expect(response.text).toBe("Hello World");
 });
 ```
+
 jalankan test
 
 npx jest request.test.js
 
 4. Request
+
 ```
 app.get('/req-http', (req, res) => {
     res.send(`Hello ${req.query.name}`);
@@ -229,7 +233,7 @@ test("Test Query Parameter", async () => {
 //npx jest request-http.test.js
 ```
 
-5. Request URL 
+5. Request URL
 
 ```
 app.get('/req-url/world', (req, res) => {
@@ -289,9 +293,9 @@ test("Test Query Parameter", async () => {
 ```
 
 7. Request Header
-case insensitive
-Object Request juga bisa kita gunakan untuk mendapatkan informasi dari HTTP Header dari Request
-Kita bisa menggunakan method req.get(name) atau req.header(name) untuk mendapatkan header berdasarkan name, khusus untuk HTTP Header, name nya adalah case insensitive
+   case insensitive
+   Object Request juga bisa kita gunakan untuk mendapatkan informasi dari HTTP Header dari Request
+   Kita bisa menggunakan method req.get(name) atau req.header(name) untuk mendapatkan header berdasarkan name, khusus untuk HTTP Header, name nya adalah case insensitive
 
 Menggunakan req.get('key-header')
 
@@ -314,6 +318,7 @@ test("Test Query Parameter", async () => {
 ```
 
 Menggunakan req.headers['key-header']
+
 ```
 // Route untuk menangani permintaan POST
 app.post('/submit-data', (req, res) => {
@@ -329,6 +334,7 @@ app.post('/submit-data', (req, res) => {
 ```
 
 Saat menggunakan rest client extension vs code
+
 ```
 POST https://example.com/comments HTTP/1.1
 content-type: application/json
@@ -468,13 +474,11 @@ test("Test Response Body", async () => {
 Middleware adalah function yang bisa digunakan untuk mengakses request object, response object dan next function dalam alur hidup aplikasi ExpressJS
 Jika Middleware memanggil next function, artinya function Middleware selanjutnya atau Router akan dieksekusi
 
-
 Ada banyak sekali kegunaan dari Middleware, seperti
 Eksekusi kode sebelum sebelum router di eksekusi
 Mengubah Request atau Response object sebelum router di eksekusi
 Mengakhiri response tanpa harus mengeksekusi router
 Dan lain-lain
-
 
 Untuk membuat middleware, kita cukup membuat function dengan 3 parameter, request, response dan next
 request adalah request object
@@ -563,6 +567,7 @@ test("Test Middleware 2", async() => {
     expect(response.text).toBe("Hello Middleware2");
 })
 ```
+
 C. Contoh 2 Middlware Api Key Middleware
 
 ```
@@ -624,6 +629,8 @@ test("Test Response Middleware 3", async () => {
     e
 ```
 
-D. 
+COBA POSTING
 
-13. 
+D.
+
+13.
