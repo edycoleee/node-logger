@@ -568,7 +568,7 @@ test("Test Middleware 2", async() => {
 })
 ```
 
-C. Contoh 2 Middlware Api Key Middleware
+C. Contoh 3 Middlware Api Key Middleware
 
 ```
 import express from "express";
@@ -626,11 +626,76 @@ test("Test Middleware 2", async() => {
 test("Test Response Middleware 3", async () => {
     const response = await request(app).get("/mid3").query({apiKey: "123"});
     expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
-    e
+    expect(response.text).toBe("Hello Middleware3"); 
+});
 ```
 
-COBA POSTING
+D. Contoh 4 Middleware Unauthorized tanpa apikey
 
-D.
+```
+const apiKeyMiddleware = (req, res, next) => {
+    if(req.query.apiKey){
+        next();
+    }else{
+        res.status(401).end();
+    }
+};
+
+export const app = express();
+
+app.use(logger);
+app.use(addPoweredHeader);
+app.use(apiKeyMiddleware);
+```
+
+```
+// tanpa api key maka request akan ditolak
+test("Test Response Middleware Unauthorized", async () => {
+    const response = await request(app).get("/mid3");
+    expect(response.status).toBe(401);
+});
+
+test("Test Response Middleware Authoeized", async () => {
+    const response = await request(app).get("/mid3").query({apiKey: "123"});
+    expect(response.text).toBe("Hello Middleware3"); 
+});
+```
+
+E. Contoh 5 Middleware Time
+```
+
+const apiKeyMiddleware = (req, res, next) => {
+    if(req.query.apiKey){
+        next();
+    }else{
+        res.status(401).end();
+    }
+};
+
+const requestTimeMiddleware = (req, res, next) => {
+    req.requestTime = Date.now();
+    next();
+};
+
+export const app = express();
+
+app.use(logger);
+app.use(addPoweredHeader);
+app.use(apiKeyMiddleware);
+app.use(requestTimeMiddleware);
+
+//......
+app.get('/time', (req, res) => {
+    res.send(`Hello , Today Is ${req.requestTime}`);
+});
+```
+
+```
+test("Test Response Middleware Time", async () => {
+    const response = await request(app).get("/time").query({apiKey: "123"});
+    expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
+    expect(response.text).toContain("Hello , Today Is");
+});
+```
 
 13.

@@ -23,3 +23,19 @@ test("Test Response Middleware 3", async () => {
     expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
     expect(response.text).toBe("Hello Middleware3"); 
 });
+
+test("Test Response Middleware Unauthorized", async () => {
+    const response = await request(app).get("/mid3");
+    expect(response.status).toBe(401);
+});
+
+test("Test Response Middleware Authoeized", async () => {
+    const response = await request(app).get("/mid3").query({apiKey: "123"});
+    expect(response.text).toBe("Hello Middleware3"); 
+});
+
+test("Test Response Middleware Time", async () => {
+    const response = await request(app).get("/time").query({apiKey: "123"});
+    expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
+    expect(response.text).toContain("Hello , Today Is");
+});

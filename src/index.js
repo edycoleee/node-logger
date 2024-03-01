@@ -18,11 +18,18 @@ const apiKeyMiddleware = (req, res, next) => {
     }
 };
 
+const requestTimeMiddleware = (req, res, next) => {
+    req.requestTime = Date.now();
+    next();
+};
+
 export const app = express();
 
 app.use(logger);
 app.use(addPoweredHeader);
 app.use(apiKeyMiddleware);
+app.use(requestTimeMiddleware);
+
 
 app.get('/', (req, res) => {
     res.send("Hello Response");
@@ -34,6 +41,10 @@ app.get('/mid1', (req, res) => {
 
 app.get('/mid3', (req, res) => {
     res.send("Hello Middleware3");
+});
+
+app.get('/time', (req, res) => {
+    res.send(`Hello , Today Is ${req.requestTime}`);
 });
 
 app.get('/edy', (req, res) => {
