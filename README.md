@@ -626,7 +626,7 @@ test("Test Middleware 2", async() => {
 test("Test Response Middleware 3", async () => {
     const response = await request(app).get("/mid3").query({apiKey: "123"});
     expect(response.get("X-Powered-By")).toBe("Coding Ndeso");
-    expect(response.text).toBe("Hello Middleware3"); 
+    expect(response.text).toBe("Hello Middleware3");
 });
 ```
 
@@ -657,11 +657,12 @@ test("Test Response Middleware Unauthorized", async () => {
 
 test("Test Response Middleware Authoeized", async () => {
     const response = await request(app).get("/mid3").query({apiKey: "123"});
-    expect(response.text).toBe("Hello Middleware3"); 
+    expect(response.text).toBe("Hello Middleware3");
 });
 ```
 
 E. Contoh 5 Middleware Time
+
 ```
 
 const apiKeyMiddleware = (req, res, next) => {
@@ -698,4 +699,170 @@ test("Test Response Middleware Time", async () => {
 });
 ```
 
-13.
+13. Route Path
+
+Sebelumnya pada materi Basic Routing, kita belajar bagaimana cara melakukan routing dengan HTTP Method sesuai yang kita mau
+Sekarang kita akan bahas lebih detail tentang Route Path nya.
+Sebelumnya, route path yang kita gunakan tidak dinamis. ExpressJS mendukung route path yang dinamis, dengan cara menggunakan route path string patterns atau regex
+
+```
+
+```
+
+```
+
+```
+
+14. Route Parameter
+
+Saat kita membuat aplikasi Web API atau RESTful API, kadang kita sering menyimpan parameter dalam URL Path, misal /products/{idProduct}, atau /categories/{idCategory}, dan lain-lain
+ExpressJS mendukung penambahan parameter dalam route path, dengan menggunakan prefix : (titik dua)
+Semua data parameter itu bisa kita tambahkan regex jika kita mau, misal /products/:id(\\d+), artinya kita menambah parameter id, dimana id tersebut harus digit
+Data route parameter secara otomatis bisa kita ambil sebagai attribute di req.params
+
+15. Route Function
+
+Kadang ada kasus ketika kita membuat route path yang sama untuk beberapa tipe HTTP Method
+Pada kasus ini, kita bisa memanfaatkan route(path) function sehingga tidak perlu mendeklarasikan nama path sama untuk beberapa route
+
+16. Router
+
+Saat kita membuat Application ExpressJS, secara default sudah terdapat object Router nya
+Namun, kita bisa membuat object Router sendiri jika kita mau, hal ini sangat cocok jika kita ingin melakukan grouping Router, lalu misal kita bisa menambahkan Router tersebut ke Application seperti Middleware
+Ini sangat cocok ketika kita ingin membuat fitur modular yang bisa mengaktifkan atau menonaktifkan router secara dinamis misalnya
+Dengan object Router, kita bisa memiliki Middleware dan Routing secara independen
+
+17. Type of Middleware
+
+Di ExpressJS, terdapat beberapa jenis Middleware
+
+a. Application-level middleware
+
+Yaitu middleware yang digunakan di object Application, sebelumnya kita sudah menggunakan Application-Level Middleware, dengan cara menggunakan function`app.use(middleware)`
+Saat kita menggunakan Application-Level Middleware, maka secara otomatis Middleware tersebut akan **dipanggil di semua route**
+Jika kita mau menggunakan Middleware hanya untuk di route path tertentu, kita bisa tambahkan route pattern ketika menggunakan app.use(), misal app.use(“/products/\*”, middleware)
+
+b. Router-level middleware
+
+Yaitu middleware yang ditambahkan pada object Router yang kita buat menggunakan `express.Router()`
+Middleware ini secara otomatis akan dipanggil ketika request masuk ke router ini
+Sama seperti dengan Application-Level Middleware, jika kita ingin middleware nya hanya dipanggil para route path tertentu, kita bisa juga tambahkan route pattern ketika menggunakan middleware nya menggunakan router.use(path, middleware)
+
+c. Error-handling middleware
+
+Yaitu middleware yang akan dipanggil ketika terjadi error di aplikasi kita `(throw Error)`
+Cara penggunaannya mirip dengan Application-Level Middleware, yang membedakan adalah function callback nya memiliki empat parameter, yaitu **error, request, response dan next**
+Object error akan secara otomatis terisi oleh data Error yang terjadi di aplikasi kita
+Middleware ini, sangat cocok ketika kita ingin menampilkan tampilan yang berbeda ketika terjadi error di aplikasi kita
+
+d. Built-in middleware
+
+ExpressJS banyak sekali menggunakan Middleware untuk melakukan pemrosesan request dan response, termasuk terdapat Built-in Middleware, yaitu middleware yang sudah terdapat secara otomatis di ExpressJS
+`express.json()`, yaitu middleware yang melakukan parsing request body menjadi JavaScript object
+express.text(), yaitu middleware yang melakukan parsing request body menjadi string
+express.raw(), yaitu middleware yang melakukan parsing request body menjadi Buffer
+`express.urlencoded()`, yaitu middleware yang melakukan parsing request body form menjadi object
+`express.static()`, yaitu middleware yang digunakan untuk melayani file static
+
+e. Third-party middleware
+
+Yaitu middleware buatan orang lain yang kita gunakan
+Untuk menggunakannya, kita perlu menambah dependency middleware nya terlebih dahulu
+
+18. Request Body
+
+Sebelumnya kita belum membahas tentang HTTP Request Body
+Di ExpressJS, Secara default HTTP Request Body tidak bisa diambil datanya oleh Router Callback, hal ini dikarenakan, jenis data Request Body bisa berbeda-beda, tergantung tipe data yang dikirim
+Oleh karena itu, di dalam ExpressJS, terdapat Built-in Middleware, yang digunakan untuk membaca Request Body, lalu melakukan konversi ke tipe data yang diinginkan
+
+- express.json() Membaca request body menjadi bentuk JSON (JavaScript Object)
+- express.text() Membaca request body menjadi bentuk string
+- express.raw() Membaca request body menjadi bentuk Buffer
+- express.urlencoded() Membaca request body menjadi bentuk Form (JavaScript Object)
+
+19. Cookie
+
+- Dalam HTTP, salah satu fitur yang biasa digunakan untuk pertukaran data dari Server dan Client adalah Cookie
+- Banyak yang menggunakan Cookie sebagai Session misalnya
+- Sayangnya, secara default, ExpressJS tidak mendukung Cookie, tapi jangan khawatir, kita bisa menggunakan Third-Party Middleware untuk mendukung Cookie ini
+
+- Cookie Parser
+
+  Cookie Parser adalah salah satu Third-Party Middleware yang bisa kita gunakan untuk mendukung fitur Cookie, dimana dengan Cookie Parser, kita secara otomatis menyimpan data ke Cookie, atau mengambil data ke Cookie
+  Setelah kita memasang Cookie Parser Middleware, kita bisa secara otomatis membaca Cookie yang dikirim dari Client melalui req.cookies
+
+- Menulis Cookie
+
+Sedangkan untuk menulis Cookie, kita bisa tambahkan di response, dengan method res.cookie(key, value, setting),
+Dan untuk menghapus Cookie, kita bisa gunakan res.clearCookie(key, setting)
+
+- Signed Cookie
+
+Salah satu kelemahan ketika kita menyimpan data di Cookie adalah, Cookie bisa dimodifikasi oleh Client, misal kita bisa modifikasi Cookie di Browser kita
+Salah satu cara untuk menjaga agar Cookie tidak dimodifikasi adalah, kita menambahkan `Signature` pada Cookie kita
+Setiap nilai Cookie akan ada Signature, dimana ketika nilai Cookie diubah, otomatis Signature tidak akan sama lagi, dan secara otomatis value Cookie tidak dianggap valid lagi
+Fitur ini sudah ada di Cookie Parser dengan nama Signed Cookie
+Kita wajib menyebutkan Cookie mana yang ingin di Signed, ketika kita membuat Cookie di response
+Selain itu, kita juga perlu memasukkan Secret Key untuk digunakan ketika proses pembuatan Signature, pastikan Secret Key nya aman dan tidak mudah ditebak
+
+- Membaca Signed Cookie
+
+Jika kita membuat Cookie sebagai Signed Cookie, maka untuk membacanya, jangan menggunakan req.cookies, melainkan harus menggunakan req.signedCookies
+
+19. Response Body Lainnya
+
+Sebelumnya, kita sudah mencoba beberapa jenis Response Body di ExpressJS
+Kita bisa menggunakan `res.send(data)` untuk mengirim response berupa text misal nya, atau sebelumnya, kita sudah menggunakan `res.json(object)` untuk mengirim data dalam bentuk JSON
+Sebenarnya masih banyak jenis Response Body yang didukung oleh ExpressJS
+
+- res.send(data) Response berupa raw data
+- res.download(path, filename, option) Response berupa file download
+- res.json(body) Response berupa JSON
+- res.redirect(url) Response redirect url
+- res.sendFile(path, option) Response berupa file
+
+20. Error Handling
+
+Apa yang terjadi jika misal terjadi Error di aplikasi kita? Secara otomatis Error tersebut akan ditangkap oleh ExpressJS
+Lalu detail error nya akan ditampilkan di response-nya secara otomatis
+Kadang, ada kasus kita ingin mengubah cara menampilkan error, atau bahkan kita memang berharap terjadi error, misal Validation Error
+Pada kasus seperti ini, untungnya ExpressJS memiliki fitur Error-Handling Middleware, dimana kita bisa membuat Middleware dan akan dieksekusi ketika terjadi error
+Berbeda dengan Middleware biasanya, pada Error-Handling Middleware, diperlukan empat parameter, dimana diawali dengan parameter error nya
+
+21. Static File
+
+Saat membuat Web, kadang kita ingin menampilkan static file seperti html, css, javascript, gambar, atau file lainnya
+Jika kita harus membuat route untuk setiap file, maka akan menyulitkan.
+Untungnya, terdapat middleware yang bisa kita gunakan untuk menyediakan static file.
+Middleware ini secara otomatis akan mencari file, jika file ada, maka akan dikembalikan file tersebut, jika tidak ada, maka akan dilanjutkan ke middleware atau route selanjutnya
+Kita bisa menggunakan Middleware `express.static()`
+
+- Prefix Path
+
+Kadang-kadang, kita ingin memberi prefix path pada static file, misal /static/filenya
+Pada kasus itu, maka kita bisa tambahkan route pada middleware nya, misal :
+app.use(‘/static’, express.static(...))
+
+22. Template Engine
+
+Saat membuat web menggunakan ExpressJS, maka jika kita membuat string HTML lalu kita kirim menggunakan response, maka hal itu sangat menyulitkan
+Biasanya, untuk mempermudah itu, kita bisa menggunakan Template Engine
+Template Engine adalah library yang digunakan untuk membuat template lalu mempermudah kita ketika ingin menampilkan data di template nya
+Biasanya template nya dalam bentuk HTML, dan data nya bisa kita ubah sesuai dengan data yang ingin kita tampilkan di HTML tersebut
+
+Pada kelas ini, kita akan menggunakan Mustache sebagai template engine
+Hal ini dikarenakan Mustache merupakan template engine yang sangat mudah digunakan
+Kita tidak akan menginstall Mustache secara manual, kita akan menggunakan bantuan library Mustache Express
+
+22. File Upload
+
+Sebelumnya kita belum membahas bagaimana jika Request Body yang dikirim adalah File Upload atau Multipart Form Data?
+Sayangnya, secara default di ExpressJS, tidak ada fitur untuk membaca File Upload
+Tapi kita bisa menggunakan Third-Party Middleware lain untuk membaca File Upload
+
+23. Not Found Error
+
+Saat user melakukan request ke URL yang tidak tersedia, maka secara default ExpressJS akan mengembalikan halaman 404
+Kadang ada kasus dimana kita ingin membuat halaman 404 sendiri
+Pada kasus ini, kita bisa menambahkan middleware di posisi paling akhir
+Middleware tersebut akan dipanggil jika memang tidak terdapat route yang tersedia untuk route path yang diakses
