@@ -132,14 +132,16 @@ npm run dev
 
 2. Routing
 
+`app.get('/', (req, res, next) => {res.send("Hello World")})`
+
 Routing merupakan teknik yang digunakan untuk meneruskan request dari URL Path ke callback yang kita tuju
 Routing di ExpressJS bisa menggunakan object Application, dan menggunakan method sesuai dengan nama HTTP Method nya
 
-app.connect(path, callback)
-app.get(path, callback)
-app.post(path, callback)
-app.put(path, callback)
-app.delete(path, callback)
+- app.connect(path, callback)
+- app.get(path, callback)
+- app.post(path, callback)
+- app.put(path, callback)
+- app.delete(path, callback)
 
 ```
 import express from "express";
@@ -164,7 +166,7 @@ app.listen(3000, () => {
 Salah satu yang sulit ketika membuat aplikasi web yang harus berjalan yaitu melakukan automation test
 Jika melakukan manual test, terlihat mudah tinggal kita buka melalui web browser
 
-Supertest adalah salah satu library yang bisa digunakan untuk membantu melakukan pengetesan web ExpressJS
+**Supertest** adalah salah satu library yang bisa digunakan untuk membantu melakukan pengetesan web ExpressJS
 
 ```
 npm install supertest --save-dev
@@ -214,6 +216,11 @@ jalankan test
 npx jest request.test.js
 
 4. Request
+
+Saat kita membuat callback di router, parameter pertama adalah **object Request**, yang secara otomatis diisi oleh ExpressJS
+Object Request akan berisikan informasi tentang HTTP Request yang masuk ke callback tersebut
+Ada banyak sekali informasi HTTP Request yang bisa kita ambil dari object Request, seperti Query Param, Header, Body dan lain-lain.
+**Request URL, Request Query Param, Request Header**
 
 ```
 app.get('/req-http', (req, res) => {
@@ -348,8 +355,17 @@ content-type: application/json
 8. Response
 
 Pada Callback Routing ExpressJS, terdapat parameter kedua yaitu response
-Response merupakan object representasi dari HTTP Response
-Kita bisa mengubah data HTTP Response melalui object Response tersebut
+**Response merupakan object** representasi dari HTTP Response
+Kita bisa mengubah data HTTP Response melalui object Response tersebut.
+Response Header, Response Body, Redirect
+
+`Response Body Method : Keterangan`
+
+- res.send(data) Response berupa raw data
+- res.json(body) Response berupa JSON
+- res.download(path, filename, option) Response berupa file download
+- res.redirect(url) Response redirect url
+- res.sendFile(path, option) Response berupa file
 
 ```
 app.get('/resp', (req, res) => {
@@ -705,12 +721,39 @@ Sebelumnya pada materi Basic Routing, kita belajar bagaimana cara melakukan rout
 Sekarang kita akan bahas lebih detail tentang Route Path nya.
 Sebelumnya, route path yang kita gunakan tidak dinamis. ExpressJS mendukung route path yang dinamis, dengan cara menggunakan route path string patterns atau regex
 
-```
+Untuk melakukan pengetesan, kita bisa menggunakan website http://forbeslindesay.github.io/express-route-tester/
 
 ```
+//route-path.test.js
 
-```
+import express from "express";
+import request from "supertest";
 
+const app = express();
+
+app.get('/products/*.json', (req, res) => {
+  res.send(req.originalUrl);
+});
+
+//d+ >> artinya desimal
+app.get('/categories/*(\\d+).json', (req, res) => {
+  res.send(req.originalUrl);
+});
+
+test("Test Route Path", async () => {
+  let response = await request(app).get("/products/edy.json");
+  expect(response.text).toBe("/products/edy.json");
+
+  response = await request(app).get("/products/salah.json");
+  expect(response.text).toBe("/products/salah.json");
+
+  response = await request(app).get("/categories/1234.json");
+  expect(response.text).toBe("/categories/1234.json");
+
+//d+ >> artinya desimal >> saat dikirim string maka akan 404
+  response = await request(app).get("/categories/salah.json");
+  expect(response.status).toBe(404);
+});
 ```
 
 14. Route Parameter
@@ -720,10 +763,89 @@ ExpressJS mendukung penambahan parameter dalam route path, dengan menggunakan pr
 Semua data parameter itu bisa kita tambahkan regex jika kita mau, misal /products/:id(\\d+), artinya kita menambah parameter id, dimana id tersebut harus digit
 Data route parameter secara otomatis bisa kita ambil sebagai attribute di req.params
 
+```
+//route-parameter.test.js
+import express from "express";
+import request from "supertest";
+
+const app = express();
+
+//id bisa berupa string ataupun numeric
+app.get('/products/:id', (req, res) => {
+  const idProduct = req.params.id;
+  res.send(`Product: ${idProduct}`);
+});
+
+//nama bisa berupa string ataupun numeric
+app.get('/siswa/:nama', (req, res) => {
+  const namaSiswa = req.params.nama;
+  res.send(`Nama Siswa: ${namaSiswa}`);
+});
+
+//id harus berupa desimal
+app.get('/categories/:id(\\d+)', (req, res) => {
+  const idCategory = req.params.id;
+  res.send(`Category: ${idCategory}`);
+});
+
+// mau bikin lebih dari satu parameter
+// app.get('/seller/:idSeller/products/:idProduct', (req, res) => {
+//     req.params.idSeller;
+//     req.params.idProduct;
+// });
+
+test("Test Route Parameter", async () => {
+  let response = await request(app).get("/products/edy");
+  expect(response.text).toBe("Product: edy");
+
+  response = await request(app).get("/products/salah");
+  expect(response.text).toBe("Product: salah");
+
+  response = await request(app).get("/categories/1234");
+  expect(response.text).toBe("Category: 1234");
+
+  response = await request(app).get("/categories/salah");
+  expect(response.status).toBe(404);
+
+  response = await request(app).get("/siswa/silmi");
+  expect(response.text).toBe("Nama Siswa: silmi");
+});
+```
+
 15. Route Function
 
-Kadang ada kasus ketika kita membuat route path yang sama untuk beberapa tipe HTTP Method
+Kadang ada kasus ketika kita `membuat route path yang sama untuk beberapa tipe HTTP Method`
 Pada kasus ini, kita bisa memanfaatkan route(path) function sehingga tidak perlu mendeklarasikan nama path sama untuk beberapa route
+
+```
+//route-function.test.js
+import express from "express";
+import request from "supertest";
+
+const app = express();
+
+app.route("/products")
+  .get((req, res) => {
+    res.send("Get Product");
+  })
+  .post((req, res) => {
+    res.send("Create Product");
+  })
+  .put((req, res) => {
+    res.send("Update Product");
+  });
+
+test("Test Route Function", async () => {
+  let response = await request(app).get("/products");
+  expect(response.text).toBe("Get Product");
+
+  response = await request(app).post("/products");
+  expect(response.text).toBe("Create Product");
+
+  response = await request(app).put("/products");
+  expect(response.text).toBe("Update Product");
+});
+```
 
 16. Router
 
