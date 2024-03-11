@@ -1085,7 +1085,40 @@ Selain itu, kita juga perlu memasukkan Secret Key untuk digunakan ketika proses 
 Jika kita membuat Cookie sebagai Signed Cookie, maka untuk membacanya, jangan menggunakan req.cookies, melainkan harus menggunakan req.signedCookies
 
 ```
+//cookie-signed.test.js
+import express from "express";
+import request from "supertest";
+import cookieParser from "cookie-parser";
 
+const app = express();
+app.use(cookieParser("CONTOHRAHASIA"));
+app.use(express.json());
+
+app.get('/dashboard', (req, res) => {
+  const name = req.signedCookies["Login"];
+  res.send(`Hello ${name}`);
+});
+
+app.post('/login', (req, res) => {
+  const name = req.body.name;
+  //cara menulis cookie yang signed
+  res.cookie("Login", name, { path: "/", signed: true });
+  res.send(`Hello ${name}`);
+});
+
+test("Test Cookie Write", async () => {
+  const response = await request(app).post("/login")
+    .send({ name: "Edy" });
+  console.info(response.get("Set-Cookie"));
+  expect(response.get("Set-Cookie").toString()).toContain("Edy");
+  expect(response.text).toBe("Hello Edy");
+});
+
+test("Test Cookie Read", async () => {
+  const response = await request(app).get("/dashboard")
+    .set("Cookie", "Login=s%3AEdy.kAg56apX%2F%2BhWKP557aBjrIGw8fEdT3VejTb926caR0o; Path=/");
+  expect(response.text).toBe("Hello Edy");
+});
 ```
 
 19. Response Body Lainnya
@@ -1100,6 +1133,23 @@ Sebenarnya masih banyak jenis Response Body yang didukung oleh ExpressJS
 - res.redirect(url) Response redirect url
 - res.sendFile(path, option) Response berupa file
 
+```
+import express from "express";
+import request from "supertest";
+
+const app = express();
+
+app.get('/', (req, res) => {
+  // langsung sind file ke browser
+  res.sendFile(__dirname + "/contoh.txt");
+});
+
+test("Test Response Send File", async () => {
+  const response = await request(app).get("/");
+  expect(response.text).toContain("This is sample text");
+});
+```
+
 20. Error Handling
 
 Apa yang terjadi jika misal terjadi Error di aplikasi kita? Secara otomatis Error tersebut akan ditangkap oleh ExpressJS
@@ -1107,6 +1157,31 @@ Lalu detail error nya akan ditampilkan di response-nya secara otomatis
 Kadang, ada kasus kita ingin mengubah cara menampilkan error, atau bahkan kita memang berharap terjadi error, misal Validation Error
 Pada kasus seperti ini, untungnya ExpressJS memiliki fitur Error-Handling Middleware, dimana kita bisa membuat Middleware dan akan dieksekusi ketika terjadi error
 Berbeda dengan Middleware biasanya, pada Error-Handling Middleware, diperlukan empat parameter, dimana diawali dengan parameter error nya
+
+```
+//error-handling.test.js
+import express from "express";
+import request from "supertest";
+
+const app = express();
+
+const errorMiddleware = (err, req, res, next) => {
+  // yang tampil saat terjadi error
+  res.status(500).send(`Terjadi Error: ${err.message}`);
+};
+
+app.get('/', (req, res) => {
+  throw new Error("Ups");
+});
+app.use(errorMiddleware); //tempatkan posisi paling bawah
+
+test("Test Response", async () => {
+  const response = await request(app).get("/");
+  expect(response.status).toBe(500);
+  expect(response.text).toBe("Terjadi Error: Ups");
+});
+
+```
 
 21. Static File
 
