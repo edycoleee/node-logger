@@ -1,5 +1,10 @@
 ## Belajar Node Logging
 
+Sumber :
+https://docs.google.com/presentation/d/1UoGN0HrQZOI7YGF55IRwA5Ao8cZ1mBHKqhpOwuRiaEk/edit?usp=sharing
+
+https://github.com/ProgrammerZamanNow/belajar-nodejs-expressjs
+
 1. Persiapan
 
 ```
@@ -854,6 +859,43 @@ Namun, kita bisa membuat object Router sendiri jika kita mau, hal ini sangat coc
 Ini sangat cocok ketika kita ingin membuat fitur modular yang bisa mengaktifkan atau menonaktifkan router secara dinamis misalnya
 Dengan object Router, kita bisa memiliki Middleware dan Routing secara independen
 
+```
+//router.test.js
+
+import express from "express";
+import request from "supertest";
+
+const app = express();
+
+//object router
+const router = express.Router();
+
+//contoh jika kita menggunakan router >> middleware
+//maka semua melawati middleware ini
+router.use((req, res, next) => {
+  console.info(`Receive request : ${req.originalUrl}`);
+  next();
+});
+
+router.get('/feature/a', (req, res) => {
+  res.send("feature a");
+});
+
+//test sebelum roputer di use di app >> error
+test("Test Router Disabled", async () => {
+  const response = await request(app).get("/feature/a");
+  expect(response.status).toBe(404);
+});
+
+//test sebelum roputer di use di app >> route ke yg tuajuan
+test("Test Router Enabled", async () => {
+  app.use(router);
+
+  const response = await request(app).get("/feature/a");
+  expect(response.text).toBe("feature a");
+});
+```
+
 17. Type of Middleware
 
 Di ExpressJS, terdapat beberapa jenis Middleware
@@ -862,13 +904,16 @@ a. Application-level middleware
 
 Yaitu middleware yang digunakan di object Application, sebelumnya kita sudah menggunakan Application-Level Middleware, dengan cara menggunakan function`app.use(middleware)`
 Saat kita menggunakan Application-Level Middleware, maka secara otomatis Middleware tersebut akan **dipanggil di semua route**
-Jika kita mau menggunakan Middleware hanya untuk di route path tertentu, kita bisa tambahkan route pattern ketika menggunakan app.use(), misal app.use(“/products/\*”, middleware)
+
+Jika kita mau menggunakan Middleware hanya untuk di route path tertentu, kita bisa tambahkan route pattern ketika menggunakan app.use(), misal `app.use(“/products/\*”, middleware)`
 
 b. Router-level middleware
 
 Yaitu middleware yang ditambahkan pada object Router yang kita buat menggunakan `express.Router()`
 Middleware ini secara otomatis akan dipanggil ketika request masuk ke router ini
-Sama seperti dengan Application-Level Middleware, jika kita ingin middleware nya hanya dipanggil para route path tertentu, kita bisa juga tambahkan route pattern ketika menggunakan middleware nya menggunakan router.use(path, middleware)
+Sama seperti dengan Application-Level Middleware,
+
+jika kita ingin middleware nya hanya dipanggil para route path tertentu, kita bisa juga tambahkan route pattern ketika menggunakan middleware nya menggunakan `router.use(path, middleware)`
 
 c. Error-handling middleware
 
@@ -880,11 +925,12 @@ Middleware ini, sangat cocok ketika kita ingin menampilkan tampilan yang berbeda
 d. Built-in middleware
 
 ExpressJS banyak sekali menggunakan Middleware untuk melakukan pemrosesan request dan response, termasuk terdapat Built-in Middleware, yaitu middleware yang sudah terdapat secara otomatis di ExpressJS
-`express.json()`, yaitu middleware yang melakukan parsing request body menjadi JavaScript object
-express.text(), yaitu middleware yang melakukan parsing request body menjadi string
-express.raw(), yaitu middleware yang melakukan parsing request body menjadi Buffer
-`express.urlencoded()`, yaitu middleware yang melakukan parsing request body form menjadi object
-`express.static()`, yaitu middleware yang digunakan untuk melayani file static
+
+- `express.json()`, yaitu middleware yang melakukan parsing request body menjadi JavaScript object
+- express.text(), yaitu middleware yang melakukan parsing request body menjadi string
+- express.raw(), yaitu middleware yang melakukan parsing request body menjadi Buffer
+- `express.urlencoded()`, yaitu middleware yang melakukan parsing request body form menjadi object
+- `express.static()`, yaitu middleware yang digunakan untuk melayani file static
 
 e. Third-party middleware
 
@@ -902,21 +948,128 @@ Oleh karena itu, di dalam ExpressJS, terdapat Built-in Middleware, yang digunaka
 - express.raw() Membaca request body menjadi bentuk Buffer
 - express.urlencoded() Membaca request body menjadi bentuk Form (JavaScript Object)
 
-19. Cookie
+```
+//request-body.test.js
+
+import express from "express";
+import request from "supertest";
+
+const app = express();
+//middleware json
+app.use(express.json());
+//middleware form urlencoded
+//{ extended: false } >> tdk baca dari query param tapi baca dari body
+app.use(express.urlencoded({ extended: false }));
+
+//req body json
+app.post('/json', (req, res) => {
+  const name = req.body.name;
+  res.json({
+    hello: `Hello ${name}`
+  });
+});
+
+//req body form
+app.post('/form', (req, res) => {
+  const name = req.body.name;
+  res.json({
+    hello: `Hello ${name}`
+  });
+});
+
+test("Test Request JSON", async () => {
+  const response = await request(app)
+    .post("/json")
+    .set("Content-Type", "application/json")
+    .send({ name: "World" });
+
+  expect(response.body).toEqual({
+    hello: `Hello World`
+  });
+});
+
+test("Test Request Form", async () => {
+  const response = await request(app)
+    .post("/form")
+    .set("Content-Type", "application/x-www-form-urlencoded")
+    .send("name=World");
+  //send mirip query param tapi didalam body
+  expect(response.body).toEqual({
+    hello: `Hello World`
+  });
+});
+```
+
+19. Cookie >>
 
 - Dalam HTTP, salah satu fitur yang biasa digunakan untuk pertukaran data dari Server dan Client adalah Cookie
 - Banyak yang menggunakan Cookie sebagai Session misalnya
-- Sayangnya, secara default, ExpressJS tidak mendukung Cookie, tapi jangan khawatir, kita bisa menggunakan Third-Party Middleware untuk mendukung Cookie ini
-
+- Sayangnya, secara default, ExpressJS tidak mendukung Cookie, tapi jangan khawatir, kita bisa menggunakan Third-Party Middleware untuk mendukung Cookie ini `npm install cookie-parser`
 - Cookie Parser
 
   Cookie Parser adalah salah satu Third-Party Middleware yang bisa kita gunakan untuk mendukung fitur Cookie, dimana dengan Cookie Parser, kita secara otomatis menyimpan data ke Cookie, atau mengambil data ke Cookie
   Setelah kita memasang Cookie Parser Middleware, kita bisa secara otomatis membaca Cookie yang dikirim dari Client melalui req.cookies
 
+```
+//cookie.test.js
+
+import express from "express";
+import request from "supertest";
+import cookieParser from "cookie-parser";
+
+const app = express();
+app.use(cookieParser());
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  const name = req.cookies["name"];
+  const name1 = req.cookies.name;
+  const penulis = req.cookies.author;
+  res.send(`Hello ${name}`);
+});
+
+test("Test Cookie Read", async () => {
+  const response = await request(app).get("/")
+    //kirim cookie dari client key:value;...
+    .set("Cookie", "name=Edy;author=Coding Cupu");
+  expect(response.text).toBe("Hello Edy");
+});
+
+```
+
 - Menulis Cookie
 
-Sedangkan untuk menulis Cookie, kita bisa tambahkan di response, dengan method res.cookie(key, value, setting),
+Sedangkan untuk menulis Cookie, kita bisa tambahkan di response, dengan method `res.cookie(key, value, setting)`,
 Dan untuk menghapus Cookie, kita bisa gunakan res.clearCookie(key, setting)
+
+```
+//cookie.test.js
+
+import express from "express";
+import request from "supertest";
+import cookieParser from "cookie-parser";
+
+const app = express();
+app.use(cookieParser());
+app.use(express.json());
+
+
+app.post('/login', (req, res) => {
+  const name = req.body.name;
+  //send cookie dari server
+  //res.cookie(key, value, setting)
+  res.cookie("Login", name, { path: "/" });
+  res.send(`Hello ${name}`);
+});
+
+
+test("Test Cookie Write", async () => {
+  const response = await request(app).post("/login")
+    .send({ name: "Edy" });
+  expect(response.get("Set-Cookie").toString()).toBe("Login=Edy; Path=/");
+  expect(response.text).toBe("Hello Edy");
+});
+```
 
 - Signed Cookie
 
@@ -930,6 +1083,10 @@ Selain itu, kita juga perlu memasukkan Secret Key untuk digunakan ketika proses 
 - Membaca Signed Cookie
 
 Jika kita membuat Cookie sebagai Signed Cookie, maka untuk membacanya, jangan menggunakan req.cookies, melainkan harus menggunakan req.signedCookies
+
+```
+
+```
 
 19. Response Body Lainnya
 
