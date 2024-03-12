@@ -1,6 +1,9 @@
-## Belajar Node Logging 
+## Belajar Node REST API
 
-1. Persiapan 
+- https://docs.google.com/presentation/d/1OP6J1tIBHFB9eq3T6g7a7oO4f8hnU9qhOQH1LGJPtjM/edit?usp=sharing
+- https://github.com/ProgrammerZamanNow/belajar-nodejs-restful-api
+
+1. Persiapan
 
 ```
 //Membuat Repo di github
@@ -79,11 +82,10 @@ coverage
 
 ```
 
-2. Logging
+2. Requirement
 
-Log file adalah file yang berisikan informasi kejadian dari sebuah sistem
-Biasanya dalam log file, terdapat informasi waktu kejadian dan pesan kejadian
-Logging adalah aksi menambah informasi log ke log file
-Logging sudah menjadi standard industri untuk menampilkan informasi yang terjadi di aplikasi yang kita buat
-Logging bukan hanya untuk menampilkan informasi, kadang digunakan untuk proses debugging ketika terjadi masalah di aplikasi kita
+RESTful API yang akan kita buat memiliki fitur sebagai berikut :
 
+- User Management
+- Contact Management
+- Address Management
