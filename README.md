@@ -1197,6 +1197,44 @@ Kadang-kadang, kita ingin memberi prefix path pada static file, misal /static/fi
 Pada kasus itu, maka kita bisa tambahkan route pada middleware nya, misal :
 app.use(‘/static’, express.static(...))
 
+create folder /static/contoh.txt
+
+```
+import express from "express";
+import request from "supertest";
+
+const app = express();
+
+//tanpa menggunakan route path maka akan mengakses folder static
+// app.use(express.static(__dirname + "/static"));
+// menggunakan route path /static
+app.use("/static", express.static(__dirname + "/static"));
+
+app.get('/', (req, res) => {
+  res.send(`Hello Response`);
+});
+
+app.get('/contoh.txt', (req, res) => {
+  res.send(`Hello Response Contoh.txt`);
+});
+
+test("Test Static File", async () => {
+  const response = await request(app).get("/");
+  expect(response.text).toBe("Hello Response");
+});
+
+test("Test Static File /contoh.txt", async () => {
+  const response = await request(app).get("/contoh.txt");
+  expect(response.text).toContain("Hello Response Contoh.txt");
+});
+
+//akses /static ke dalam folder file
+test("Test Static File /static/contoh.txt", async () => {
+  const response = await request(app).get("/static/contoh.txt");
+  expect(response.text).toContain("This is sample text from static");
+});
+```
+
 22. Template Engine
 
 Saat membuat web menggunakan ExpressJS, maka jika kita membuat string HTML lalu kita kirim menggunakan response, maka hal itu sangat menyulitkan
@@ -1208,11 +1246,137 @@ Pada kelas ini, kita akan menggunakan Mustache sebagai template engine
 Hal ini dikarenakan Mustache merupakan template engine yang sangat mudah digunakan
 Kita tidak akan menginstall Mustache secara manual, kita akan menggunakan bantuan library Mustache Express
 
+`npm install mustache-express`
+
+```
+<!-- /test/views/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+</head>
+
+<body>
+  <p>{{say}}</p>
+</body>
+
+</html>
+```
+
+```
+import express from "express";
+import request from "supertest";
+import mustacheExpress from "mustache-express";
+
+const app = express();
+
+app.set("views", __dirname + "/views");
+app.set("view engine", "html");
+app.engine("html", mustacheExpress());
+
+app.get('/', (req, res) => {
+  //render dan mengirim variable ke dalam html >> object
+  res.render("index", {
+    title: "Hello World",
+    say: "This is a test"
+  });
+});
+
+test("Test Response", async () => {
+  const response = await request(app).get("/");
+  console.info(response.text);
+  expect(response.text).toContain("Hello World");
+  expect(response.text).toContain("This is a test");
+});
+```
+
 22. File Upload
 
 Sebelumnya kita belum membahas bagaimana jika Request Body yang dikirim adalah File Upload atau Multipart Form Data?
 Sayangnya, secara default di ExpressJS, tidak ada fitur untuk membaca File Upload
 Tapi kita bisa menggunakan Third-Party Middleware lain untuk membaca File Upload
+
+`npm install express-fileupload`
+
+utk menampung semua file upload, buat folder /upload
+
+```
+//request-body.test.js
+
+import express from "express";
+import request from "supertest";
+//import library file uploud
+import expressFileUpload from "express-fileupload";
+
+const app = express();
+//middleware json
+app.use(express.json());
+//middleware form urlencoded >> defaulnya : app.use(express.urlencoded());
+//{ extended: false } >> tdk baca dari query param tapi baca dari body
+app.use(express.urlencoded({ extended: false }));
+//middleware file uploud
+app.use(expressFileUpload());
+
+//req body json
+app.post('/json', (req, res) => {
+  const name = req.body.name;
+  res.json({
+    hello: `Hello ${name}`
+  });
+});
+
+//req body form
+app.post('/form', (req, res) => {
+  const name = req.body.name;
+  res.json({
+    hello: `Hello ${name}`
+  });
+});
+
+//route untuk memindahkan file dari attacht ke folder /uploud
+app.post("/file", async (req, res) => {
+  const textFile = req.files.article;
+  await textFile.mv(__dirname + "/upload/" + textFile.name);
+
+  res.send(`Hello ${req.body.name}, you uploaded ${textFile.name}`);
+});
+
+//test uploud file
+test("Test Request File Upload", async () => {
+  const response = await request(app)
+    .post("/file")
+    .set("Content-Type", "multipart/form-data")
+    .field("name", "Edy")
+    .attach("article", __dirname + "/contoh.txt");
+
+  expect(response.text).toBe("Hello Edy, you uploaded contoh.txt");
+});
+
+test("Test Request JSON", async () => {
+  const response = await request(app)
+    .post("/json")
+    .set("Content-Type", "application/json")
+    .send({ name: "World" });
+
+  expect(response.body).toEqual({
+    hello: `Hello World`
+  });
+});
+
+test("Test Request Form", async () => {
+  const response = await request(app)
+    .post("/form")
+    .set("Content-Type", "application/x-www-form-urlencoded")
+    .send("name=World");
+  //send mirip query param tapi didalam body
+  expect(response.body).toEqual({
+    hello: `Hello World`
+  });
+});
+```
 
 23. Not Found Error
 
@@ -1220,3 +1384,29 @@ Saat user melakukan request ke URL yang tidak tersedia, maka secara default Expr
 Kadang ada kasus dimana kita ingin membuat halaman 404 sendiri
 Pada kasus ini, kita bisa menambahkan middleware di posisi paling akhir
 Middleware tersebut akan dipanggil jika memang tidak terdapat route yang tersedia untuk route path yang diakses
+
+```
+import express from "express";
+import request from "supertest";
+
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send(`Hello Response`);
+});
+
+//route paling akhir jika tidak menemukan route
+app.use((req, res, next) => {
+  res.status(404).send(`404 Not Found Euy`);
+});
+
+test("Test Response", async () => {
+  const response = await request(app).get("/");
+  expect(response.text).toBe("Hello Response");
+});
+
+test("Test Response Not FOund", async () => {
+  const response = await request(app).get("/halaman-tidak-ada");
+  expect(response.text).toBe("404 Not Found Euy");
+});
+```

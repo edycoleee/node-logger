@@ -2,6 +2,8 @@
 
 import express from "express";
 import request from "supertest";
+//import library file uploud
+import expressFileUpload from "express-fileupload";
 
 const app = express();
 //middleware json
@@ -9,6 +11,8 @@ app.use(express.json());
 //middleware form urlencoded >> defaulnya : app.use(express.urlencoded());
 //{ extended: false } >> tdk baca dari query param tapi baca dari body
 app.use(express.urlencoded({ extended: false }));
+//middleware file uploud
+app.use(expressFileUpload());
 
 //req body json
 app.post('/json', (req, res) => {
@@ -24,6 +28,25 @@ app.post('/form', (req, res) => {
   res.json({
     hello: `Hello ${name}`
   });
+});
+
+//route untuk memindahkan file dari attacht ke folder /uploud
+app.post("/file", async (req, res) => {
+  const textFile = req.files.article;
+  await textFile.mv(__dirname + "/upload/" + textFile.name);
+
+  res.send(`Hello ${req.body.name}, you uploaded ${textFile.name}`);
+});
+
+//test uploud file
+test("Test Request File Upload", async () => {
+  const response = await request(app)
+    .post("/file")
+    .set("Content-Type", "multipart/form-data")
+    .field("name", "Edy")
+    .attach("article", __dirname + "/contoh.txt");
+
+  expect(response.text).toBe("Hello Edy, you uploaded contoh.txt");
 });
 
 test("Test Request JSON", async () => {
