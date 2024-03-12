@@ -3,7 +3,7 @@
 - https://docs.google.com/presentation/d/1OP6J1tIBHFB9eq3T6g7a7oO4f8hnU9qhOQH1LGJPtjM/edit?usp=sharing
 - https://github.com/ProgrammerZamanNow/belajar-nodejs-restful-api
 
-1. Persiapan
+### 1. Persiapan
 
 ```
 //Membuat Repo di github
@@ -82,7 +82,7 @@ coverage
 
 ```
 
-2. Requirement
+### 2. Requirement
 
 RESTful API yang akan kita buat memiliki fitur sebagai berikut :
 
@@ -104,24 +104,27 @@ Contact Address Data: Street, City, Province, Country, Postal Code
 
 Address API: Create Address, Update Address, Get Address, List Address, Remove Address
 
-3. Memulai Project
+### 3. Memulai Project
 
-Buat folder belajar-nodejs-restful-api `npm init`. Buka package.json, dan tambah type module. 
+Buat folder belajar-nodejs-restful-api `npm init`. Buka package.json, dan tambah type module.
+
 ```
-npm install joi 
+npm install joi
 npm install express
 npm install --save-dev @types/express
-npm install --save-dev prisma 
+npm install --save-dev prisma
 npm install winston
 npm install bcrypt
 npm install --save-dev @types/bcrypt
-npm install uuid 
+npm install uuid
 npm install --save-dev @types/uuid
 npm install --save-dev jest @types/jest
 npm install --save-dev babel-jest @babel/preset-env
 npm install --save-dev supertest @types/supertest
 ```
+
 package.json
+
 ```
   "scripts": {
     "test": "jest -i"
@@ -133,7 +136,9 @@ package.json
   },
   "type": "module",
 ```
+
 babel.config.json
+
 ```
 {
   "presets": [
@@ -141,18 +146,41 @@ babel.config.json
   ]
 }
 ```
-4. Membuat API Specs
+
+### 4. Membuat API Specs
 
 - docs/user.md
+
 ```
-Register User API   : POST /api/users 
+Register User API   : POST /api/users
 Login User API      : POST /api/users/login
+Update User API     : PATCH /api/users/current
+Get User API        : GET /api/users/current
+Logout User API     : DELETE /api/users/logout
 ```
+
 - docs/contact.md
 
+```
+Create Contact API : POST /api/contacts
+Update Contact API : PUT /api/contacts/:id
+Get Contact API    : GET /api/contacts/:id
+Search Contact API : GET /api/contacts
+Remove Contact API : DELETE /api/contacts/:id
+```
 
 - docs/address.md
 
+```
+Create Address API : POST /api/contacts/:contactId/addresses
+Update Address API : PUT /api/contacts/:contactId/addresses/:addressId
+Get Address API    : GET /api/contacts/:contactId/addresses/:addressId
+List Addresses API : GET /api/contacts/:contactId/addresses
+Remove Address API : DELETE /api/contacts/:contactId/addresses/:addressId
+```
 
+### 5. Setup Database Menggunakan ORM Prisma
 
+buka mysql
 
+`npx prisma init`
