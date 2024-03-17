@@ -5,7 +5,7 @@ https://docs.google.com/presentation/d/1UoGN0HrQZOI7YGF55IRwA5Ao8cZ1mBHKqhpOwuRi
 
 https://github.com/ProgrammerZamanNow/belajar-nodejs-expressjs
 
-1. Persiapan
+### 1. Persiapan
 
 ```
 //Membuat Repo di github
@@ -85,7 +85,7 @@ coverage
 
 ```
 
-2. Logging
+### 2. Logging
 
 Log file adalah file yang berisikan informasi kejadian dari sebuah sistem
 Biasanya dalam log file, terdapat informasi waktu kejadian dan pesan kejadian
@@ -95,7 +95,7 @@ Logging bukan hanya untuk menampilkan informasi, kadang digunakan untuk proses d
 
 ## Express JS
 
-1. Application
+### 1. Application
 
 Saat kita membuat web menggunakan ExpressJS, kita akan membuat object Application
 Application adalah object utama dalam library ExpressJS
@@ -135,7 +135,7 @@ npm install --save-dev nodemon
 
 npm run dev
 
-2. Routing
+### 2. Routing
 
 `app.get('/', (req, res, next) => {res.send("Hello World")})`
 
@@ -166,7 +166,7 @@ app.listen(3000, () => {
 });
 ```
 
-3. Unit Test
+### 3. Unit Test
 
 Salah satu yang sulit ketika membuat aplikasi web yang harus berjalan yaitu melakukan automation test
 Jika melakukan manual test, terlihat mudah tinggal kita buka melalui web browser
@@ -193,6 +193,13 @@ app.get('/edy', (req, res) => {
     res.send("Hello Edy");
 });
 
+app.get('/silmi', (req, res) => {
+  res.json({
+    ucapan: "Halo",
+    nama: "Silmi"
+  })
+})
+
 //app.listen(3000, () => {
 //    console.info("Server started on port 3000");
 //});
@@ -211,16 +218,26 @@ import { app } from "../src/index.js";
 // });
 
 test("Test ExpressJS", async () => {
+  //Cek response String >> text >> toBe
     const response = await request(app).get("/");
     expect(response.text).toBe("Hello World");
 });
+
+test("Test Request2", async () => {
+  //Cek response Object >> body >> toEqual
+  const response = await request(app).get("/silmi");
+  expect(response.body).toEqual({
+    ucapan: "Halo",
+    nama: "Silmi"
+  });
+})
 ```
 
 jalankan test
 
 npx jest request.test.js
 
-4. Request
+### 4. Request
 
 Saat kita membuat callback di router, parameter pertama adalah **object Request**, yang secara otomatis diisi oleh ExpressJS
 Object Request akan berisikan informasi tentang HTTP Request yang masuk ke callback tersebut
@@ -238,6 +255,7 @@ import request from "supertest";
 import { app } from "../src/index.js";
 
 test("Test Query Parameter", async () => {
+  //http://localhost:3000/req-http?nama=Edy
     const response = await request(app).get("/req-http").query({ name: "Edy" });
     expect(response.text).toBe("Hello Edy");
 });
@@ -245,7 +263,7 @@ test("Test Query Parameter", async () => {
 //npx jest request-http.test.js
 ```
 
-5. Request URL
+### 5. Request URL
 
 ```
 app.get('/req-url/world', (req, res) => {
@@ -264,6 +282,7 @@ import request from "supertest";
 import { app } from "../src/index.js";
 
 test("Test Request URL", async () => {
+  //http://localhost:3000/req-url/world?name=Edy
     const response = await request(app)
         .get("/req-url/world")
         .query({ name: "Edy" });
@@ -277,7 +296,7 @@ test("Test Request URL", async () => {
 });
 ```
 
-6. Request Query Param
+### 6. Request Query Param
 
 Request juga bisa digunakan untuk mengambil data query parameter
 Secara otomatis, semua query parameter akan disimpan dalam bentuk object di req.query
@@ -304,10 +323,11 @@ test("Test Query Parameter", async () => {
 });
 ```
 
-7. Request Header
-   case insensitive
-   Object Request juga bisa kita gunakan untuk mendapatkan informasi dari HTTP Header dari Request
-   Kita bisa menggunakan method req.get(name) atau req.header(name) untuk mendapatkan header berdasarkan name, khusus untuk HTTP Header, name nya adalah case insensitive
+### 7. Request Header
+
+case insensitive
+Object Request juga bisa kita gunakan untuk mendapatkan informasi dari HTTP Header dari Request
+Kita bisa menggunakan method req.get(name) atau req.header(name) untuk mendapatkan header berdasarkan name, khusus untuk HTTP Header, name nya adalah case insensitive
 
 Menggunakan req.get('key-header')
 
@@ -357,7 +377,7 @@ content-type: application/json
 }
 ```
 
-8. Response
+### 8. Response
 
 Pada Callback Routing ExpressJS, terdapat parameter kedua yaitu response
 **Response merupakan object** representasi dari HTTP Response
@@ -388,7 +408,7 @@ test("Test Response"), async() => {
 }
 ```
 
-9. Response Status
+### 9. Response Status
 
 Saat kita ingin mengubah HTTP Status dari HTTP Response yang kita buat, kita bisa menggunakan method res.status(code)
 
@@ -418,7 +438,7 @@ test("Test Response Status", async () => {
 });
 ```
 
-9. Response Header
+### 9. Response Header
 
 Kita juga bisa mengubah HTTP Response Header dengan menggunakan method res.set(name, value) atau res.header(name, value)
 Atau jika ingin langsung beberapa name, kita bisa masukkan dalam bentuk object ke dalam parameter name nya
@@ -445,7 +465,7 @@ test("Test Response Header", async () => {
 });
 ```
 
-10. Response Body
+### 10. Response Body
 
 Untuk mengubah Response Body, kita bisa menggunakan method res.send(body)
 Dimana parameter body bisa kita kirim dalam bentuk buffer atau string, baik itu text, html, json dan lain-lain
@@ -468,7 +488,7 @@ test("Test Response Body", async () => {
 });
 ```
 
-11. Redirect
+### 11. Redirect
 
 Seperti yang pernah dijelaskan di kelas HTTP, untuk melakukan Redirect dari sebuah web ke halaman lain, kita hanya cukup menggunakan HTTP Header Location
 Di ExpressJS, kita bisa lakukan manual dengan menggunakan HTTP Header Location, atau bisa dengan bantuan method res.redirect(to)
@@ -490,7 +510,7 @@ test("Test Response Body", async () => {
 });
 ```
 
-12. Middleware
+### 12. Middleware
 
 Middleware adalah function yang bisa digunakan untuk mengakses request object, response object dan next function dalam alur hidup aplikasi ExpressJS
 Jika Middleware memanggil next function, artinya function Middleware selanjutnya atau Router akan dieksekusi
@@ -506,7 +526,7 @@ request adalah request object
 response adalah response object
 next adalah next function, bisa middleware selanjutnya atau router
 
-A. Contoh 1 Middlware tanpa router
+#### A. Contoh 1 Middlware tanpa router
 
 request >> next >> next
 
@@ -548,7 +568,7 @@ test("Test Middleware 1", async() => {
 })
 ```
 
-B. Contoh 2 Middlware tanpa router
+#### B. Contoh 2 Middlware tanpa router
 
 ```
 import express from "express";
@@ -589,7 +609,7 @@ test("Test Middleware 2", async() => {
 })
 ```
 
-C. Contoh 3 Middlware Api Key Middleware
+#### C. Contoh 3 Middlware Api Key Middleware
 
 ```
 import express from "express";
@@ -651,7 +671,7 @@ test("Test Response Middleware 3", async () => {
 });
 ```
 
-D. Contoh 4 Middleware Unauthorized tanpa apikey
+#### D. Contoh 4 Middleware Unauthorized tanpa apikey
 
 ```
 const apiKeyMiddleware = (req, res, next) => {
@@ -682,7 +702,7 @@ test("Test Response Middleware Authoeized", async () => {
 });
 ```
 
-E. Contoh 5 Middleware Time
+#### E. Contoh 5 Middleware Time
 
 ```
 
@@ -720,7 +740,7 @@ test("Test Response Middleware Time", async () => {
 });
 ```
 
-13. Route Path
+### 13. Route Path
 
 Sebelumnya pada materi Basic Routing, kita belajar bagaimana cara melakukan routing dengan HTTP Method sesuai yang kita mau
 Sekarang kita akan bahas lebih detail tentang Route Path nya.
@@ -761,7 +781,7 @@ test("Test Route Path", async () => {
 });
 ```
 
-14. Route Parameter
+### 14. Route Parameter
 
 Saat kita membuat aplikasi Web API atau RESTful API, kadang kita sering menyimpan parameter dalam URL Path, misal /products/{idProduct}, atau /categories/{idCategory}, dan lain-lain
 ExpressJS mendukung penambahan parameter dalam route path, dengan menggunakan prefix : (titik dua)
@@ -817,7 +837,7 @@ test("Test Route Parameter", async () => {
 });
 ```
 
-15. Route Function
+### 15. Route Function
 
 Kadang ada kasus ketika kita `membuat route path yang sama untuk beberapa tipe HTTP Method`
 Pada kasus ini, kita bisa memanfaatkan route(path) function sehingga tidak perlu mendeklarasikan nama path sama untuk beberapa route
@@ -852,7 +872,7 @@ test("Test Route Function", async () => {
 });
 ```
 
-16. Router
+### 16. Router
 
 Saat kita membuat Application ExpressJS, secara default sudah terdapat object Router nya
 Namun, kita bisa membuat object Router sendiri jika kita mau, hal ini sangat cocok jika kita ingin melakukan grouping Router, lalu misal kita bisa menambahkan Router tersebut ke Application seperti Middleware
@@ -896,7 +916,7 @@ test("Test Router Enabled", async () => {
 });
 ```
 
-17. Type of Middleware
+### 17. Type of Middleware
 
 Di ExpressJS, terdapat beberapa jenis Middleware
 
@@ -937,7 +957,7 @@ e. Third-party middleware
 Yaitu middleware buatan orang lain yang kita gunakan
 Untuk menggunakannya, kita perlu menambah dependency middleware nya terlebih dahulu
 
-18. Request Body
+### 18. Request Body
 
 Sebelumnya kita belum membahas tentang HTTP Request Body
 Di ExpressJS, Secara default HTTP Request Body tidak bisa diambil datanya oleh Router Callback, hal ini dikarenakan, jenis data Request Body bisa berbeda-beda, tergantung tipe data yang dikirim
@@ -1000,7 +1020,7 @@ test("Test Request Form", async () => {
 });
 ```
 
-19. Cookie >>
+### 19. Cookie >>
 
 - Dalam HTTP, salah satu fitur yang biasa digunakan untuk pertukaran data dari Server dan Client adalah Cookie
 - Banyak yang menggunakan Cookie sebagai Session misalnya
@@ -1121,7 +1141,7 @@ test("Test Cookie Read", async () => {
 });
 ```
 
-19. Response Body Lainnya
+### 20. Response Body Lainnya
 
 Sebelumnya, kita sudah mencoba beberapa jenis Response Body di ExpressJS
 Kita bisa menggunakan `res.send(data)` untuk mengirim response berupa text misal nya, atau sebelumnya, kita sudah menggunakan `res.json(object)` untuk mengirim data dalam bentuk JSON
@@ -1150,7 +1170,7 @@ test("Test Response Send File", async () => {
 });
 ```
 
-20. Error Handling
+### 21. Error Handling
 
 Apa yang terjadi jika misal terjadi Error di aplikasi kita? Secara otomatis Error tersebut akan ditangkap oleh ExpressJS
 Lalu detail error nya akan ditampilkan di response-nya secara otomatis
@@ -1183,7 +1203,7 @@ test("Test Response", async () => {
 
 ```
 
-21. Static File
+### 22. Static File
 
 Saat membuat Web, kadang kita ingin menampilkan static file seperti html, css, javascript, gambar, atau file lainnya
 Jika kita harus membuat route untuk setiap file, maka akan menyulitkan.
@@ -1235,7 +1255,7 @@ test("Test Static File /static/contoh.txt", async () => {
 });
 ```
 
-22. Template Engine
+### 23. Template Engine
 
 Saat membuat web menggunakan ExpressJS, maka jika kita membuat string HTML lalu kita kirim menggunakan response, maka hal itu sangat menyulitkan
 Biasanya, untuk mempermudah itu, kita bisa menggunakan Template Engine
@@ -1293,7 +1313,7 @@ test("Test Response", async () => {
 });
 ```
 
-22. File Upload
+### 24. File Upload
 
 Sebelumnya kita belum membahas bagaimana jika Request Body yang dikirim adalah File Upload atau Multipart Form Data?
 Sayangnya, secara default di ExpressJS, tidak ada fitur untuk membaca File Upload
@@ -1378,7 +1398,7 @@ test("Test Request Form", async () => {
 });
 ```
 
-23. Not Found Error
+### 25. Not Found Error
 
 Saat user melakukan request ke URL yang tidak tersedia, maka secara default ExpressJS akan mengembalikan halaman 404
 Kadang ada kasus dimana kita ingin membuat halaman 404 sendiri
