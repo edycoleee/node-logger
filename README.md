@@ -646,3 +646,32 @@ publicRouter.post('/api/users', async (req, res) => {
 ```
 
 - test validasi
+
+```
+describe('POST /api/users', () => {
+  const USERNAME = 'john'
+  //menghapus data setelah test insert
+  afterEach(async () => {
+    await removeTestUser(USERNAME);
+  })
+
+  it('should add new data to MySQL', async () => {
+    const response = await request(app)
+      .post('/api/users')
+      .send({ username: USERNAME, password: 'john1', name: 'john' });
+    expect(response.status).toBe(201);
+    expect(response.text).toBe('Data inserted successfully');
+  });
+
+  it('should reject if request is not valid', async () => {
+    const invalidData = { username: 'John' }; // Missing 'name, password' field
+    const response = await request(app)
+      .post('/api/users')
+      .send(invalidData);
+    expect(response.status).toBe(400);
+    //expect(response.body.errors).toBeDefined();
+  });
+});
+```
+
+### 10. DELETE DATA

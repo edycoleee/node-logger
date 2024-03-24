@@ -62,14 +62,36 @@ publicRouter.post('/api/users', async (req, res) => {
   }
 });
 
+// Skema validasi POST NEW DATA users menggunakan Joi
+const schemaDeleteUser = Joi.object({
+  username: Joi.string().required()
+});
+
 // Endpoint untuk menghapus data dari MySQL berdasarkan username
-// publicRouter.delete('/api/users', userController.logout);
 publicRouter.delete('/api/users/:username', async (req, res) => {
   try {
+    // Validasi data username
+    const { error } = schemaDeleteUser.validate(req.params);
+    if (error) {
+      logger.error(`Validation Error: ${error.message}`);
+      return res.status(400).send(error.details[0].message);
+    }
+
     const { username } = req.params;
-    await query('DELETE FROM my_table WHERE id = ?', [username]);
-    const rows = await query('SELECT * FROM users WHERE username = ?', [username]);
-    logger.info(`DELETE DATA: ${JSON.stringify(rows)}`);
+    //check data jika ada
+    const rowsExist = await query('SELECT * FROM users WHERE username = ?', [username]);
+    logger.info(`GET DATA: ${JSON.stringify(rowsExist)}`);
+    if (rowsExist !== 1) res.status(404).send('Data Not Found');
+
+    //delete data
+    const result = await query('DELETE FROM users WHERE username = ?', [username]);
+    let message = 'Error in delete';
+    if (result.affectedRows) {
+      message = 'deleted successfully';
+    }
+    console.log("username :", username);
+    console.log("result :", result.affectedRows);
+    logger.info(`DELETE DATA: ${username}`);
     res.status(200).send('Data deleted successfully');
   } catch (error) {
     logger.error(`Error: ${error.message}`);
