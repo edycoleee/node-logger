@@ -17,6 +17,9 @@ git branch -M main
 git remote add origin https://github.com/edycoleee/node-logger.git
 git push -u origin main
 
+//create directory
+mkdir node-logger && cd node-logger
+
 //init dan instal depedency
 npm init
 npm install jest --save-dev
@@ -184,3 +187,462 @@ Remove Address API : DELETE /api/contacts/:contactId/addresses/:addressId
 buka mysql
 
 `npx prisma init`
+
+### 5. Setup dengan MYSQL tanpa ORM
+
+- Membuat database / Schema dbsiswa
+
+```
+CREATE DATABASE `dbsiswa`
+```
+
+- Membuat table user
+
+```
+USE dbsiswa
+
+CREATE TABLE `users` (
+    `username` VARCHAR(100) NOT NULL,
+    `password` VARCHAR(100) NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `token` VARCHAR(100) NULL,
+
+    PRIMARY KEY (`username`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE InnoDB;
+
+INSERT INTO users(username,password,name)
+VALUES
+('silmi','silmi1','silmi'),
+('afin','afin1','afin'),
+('edy','edy1','edy'),
+('tutik','tutik1','tutik')
+
+```
+
+- Koneksi ke database
+
+```
+DB_HOST=localhost
+DB_USERNAME=root
+DB_PASSWORD=760410
+DB_NAME=dbsiswa
+DB_PORT=3306
+```
+
+### 6. Setup NODE Project
+
+- install depencies >> semua library yang dibutuhkan
+  `npm install winston winston-transport express joi uuid bcrypt`
+  `npm install --save-dev nodemon`
+
+- update package.json
+
+```
+//package.json >> jalankan dev / production(start)
+  ....
+  "scripts": {
+    "test": "jest",
+    "start": "node ./src/index.js",
+    "dev": "nodemon ./src/index.js"
+  },
+
+```
+
+- buat file //src/index.js >> file utama yang dijalankan saat server
+
+```
+//src/index.js
+import { logger } from "./application/logging.js";
+import { app } from "./application/web.js";
+
+
+// Jalankan server
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  logger.info(`Server started on port ${PORT}`);
+});
+```
+
+- buat file //src/application/web.js >> bagian dari index.js
+
+```
+//src/application/web.js
+
+import express from "express";
+import { logger } from "./logging.js";
+
+export const app = express();
+
+app.use(express.json());
+
+// Middleware untuk logging permintaan
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+});
+
+// Middleware untuk menangkap kesalahan
+app.use((err, req, res, next) => {
+  logger.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+```
+
+- Buat File //src/application/logging.js >> logging yang ditampilkan console
+
+```
+//src/application/logging.js
+
+import winston from "winston";
+
+export const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console({})
+    //new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    //new winston.transports.File({ filename: 'combined.log' })
+  ]
+});
+```
+
+- untuk jalankan dev `npm run dev` , sedangkan jika prod `npm run start`
+
+### 7. Testing Awal
+
+`npm install jest supertest @types/jest --save-dev`
+
+- membuat router public (bisa diakses tanpa password)
+
+```
+//src/route/public-api/js
+import express from "express";
+import { logger } from "../application/logging.js";
+
+const publicRouter = new express.Router();
+
+// User API
+
+// Endpoint untuk contoh API
+publicRouter.get('/', (req, res) => {
+  logger.info('Hello World requested');
+  res.send('Hello World!');
+});
+
+
+export {
+  publicRouter
+}
+```
+
+- daftarkan pada web.js
+
+```
+//src/application/web.js
+
+import express from "express";
+import { logger } from "./logging.js";
+import { publicRouter } from "../route/public-api.js";
+
+export const app = express();
+
+app.use(express.json());
+
+// Middleware untuk logging permintaan
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+});
+
+// Middleware untuk menangkap kesalahan
+app.use((err, req, res, next) => {
+  logger.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+app.use(publicRouter);
+```
+
+- buat unit test //test/app.test.js
+
+```
+const request = require('supertest');
+const { app } = require('../src/application/web');
+
+
+describe('GET /', () => {
+  it('should return Hello World', async () => {
+    const response = await request(app).get('/');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('Hello World!');
+  });
+});
+```
+
+- jalankan test dengan `npx jest app.test.js`
+
+### 8. Setup Database Menggunakan Library MYSQL2 >> GET
+
+`npm install mysql2`
+
+- konfigurasi mysql
+
+```
+//src/application/config.js
+
+export const config = {
+  db: {
+    /* don't expose password or any sensitive info, done only for demo */
+    host: "localhost",
+    user: "root",
+    password: "760410",
+    database: "dbsiswa",
+    connectTimeout: 60000
+  },
+  listPerPage: 10,
+};
+
+```
+
+```
+//src/service/db.js
+import mysql from "mysql2/promise";
+import { config } from "../application/config.js";
+
+export async function query(sql, params) {
+  const connection = await mysql.createConnection(config.db);
+  const [results,] = await connection.execute(sql, params);
+  await connection.end();
+  return results;
+}
+
+```
+
+```
+//src/services/programmingLanguages.js
+
+const db = require('./db');
+const helper = require('../helper');
+const config = require('../config');
+
+async function getMultiple(page = 1){
+  const offset = helper.getOffset(page, config.listPerPage);
+  const rows = await db.query(
+    `SELECT id, name, released_year, githut_rank, pypl_rank, tiobe_rank
+    FROM programming_languages LIMIT ${offset},${config.listPerPage}`
+  );
+  const data = helper.emptyOrRows(rows);
+  const meta = {page};
+
+  return {
+    data,
+    meta
+  }
+}
+
+module.exports = {
+  getMultiple
+}
+
+```
+
+- membuat routing sederhana GET /api/users >> menampilkan semua users
+
+```
+//src/route/public-api/js
+import express from "express";
+import { logger } from "../application/logging.js";
+import { query } from "../service/db.js";
+
+
+const publicRouter = new express.Router();
+
+// publicRouter.get('/ping', healthController.ping);
+
+// Endpoint untuk contoh API
+publicRouter.get('/', (req, res) => {
+  logger.info('Hello World requested');
+  res.send('Hello World!');
+});
+
+// User API
+publicRouter.get('/api/users', async (req, res) => {
+  try {
+    const rows = await query('SELECT * FROM users')
+    //console.log(rows);
+    res.status(200).json(rows)
+  } catch (error) {
+    logger.error(`Error: ${error.message}`);
+    res.status(500).send('Internal Server Error');
+  }
+
+});
+
+export {
+  publicRouter
+}
+```
+
+- menjalankan unit test
+
+```
+//test/app.test.js
+const request = require('supertest');
+const { app } = require('../src/application/web');
+
+
+describe('GET /', () => {
+  it('should return Hello World', async () => {
+    const response = await request(app).get('/');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('Hello World!');
+  });
+});
+
+describe('GET /api/users', () => {
+  it('should return data from MySQL', async () => {
+    const response = await request(app).get('/api/users');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(expect.any(Array));
+  });
+});
+```
+
+### 9. POST NEW DATA
+
+- membuat routing post
+
+```
+//src/route/public-api/js
+import express from "express";
+import { logger } from "../application/logging.js";
+import { query } from "../service/db.js";
+
+const publicRouter = new express.Router();
+
+
+// Endpoint untuk contoh API
+publicRouter.get('/', (req, res) => {
+  logger.info('Hello World requested');
+  res.send('Hello World!');
+});
+
+// Users API
+//GET ALL DATA
+publicRouter.get('/api/users', async (req, res) => {
+  try {
+    const rows = await query('SELECT * FROM users')
+    //console.log(rows);
+    logger.info(`GET DATA: ${rows}`);
+    res.status(200).json(rows)
+  } catch (error) {
+    logger.error(`Error: ${error.message}`);
+    res.status(500).send('Internal Server Error');
+  }
+
+});
+
+//POST NEW DATA
+publicRouter.post('/api/users', async (req, res) => {
+  try {
+    const { username, password, name } = req.body;
+    await query('INSERT INTO users (username,password,name) VALUES (?, ?, ?)', [username, password, name]);
+    const rows = await query('SELECT * FROM users WHERE username = ?', [username]);
+    logger.info(`POST NEW DATA: ${JSON.stringify(rows)}`);
+    res.status(201).send('Data inserted successfully');
+  } catch (error) {
+    logger.error(`Error: ${error.message}`);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+export {
+  publicRouter
+}
+```
+
+- pada testing insert data harus di lakukan delete untuk menghilangkan datany
+
+```
+//test/test-util.js
+
+import { logger } from "../src/application/logging";
+import { query } from "../src/service/db";
+
+export const removeTestUser = async (username) => {
+  await query('DELETE FROM users WHERE username = ?', [username]);
+  const rows = await query('SELECT * FROM users WHERE username = ?', [username]);
+  logger.info(`DELETE NEW DATA: ${JSON.stringify(rows)}`);
+}
+```
+
+- testing POST NEW DATA
+
+```
+//test/app.test.js
+const request = require('supertest');
+const { app } = require('../src/application/web');
+const { removeTestUser } = require('./test-util');
+
+
+describe('POST /api/users', () => {
+  const USERNAME = 'john'
+  //menghapus data setelah test insert
+  afterEach(async () => {
+    await removeTestUser(USERNAME);
+  })
+
+  it('should add new data to MySQL', async () => {
+    const response = await request(app)
+      .post('/api/users')
+      .send({ username: USERNAME, password: 'john1', name: 'john' });
+    expect(response.status).toBe(201);
+    expect(response.text).toBe('Data inserted successfully');
+  });
+});
+```
+
+### 9. POST NEW DATA IMPLEMENTASI VALIDATION DENGAN JOI
+
+`npm install joy`
+
+- implementasi pada post
+
+```
+// Skema validasi POST NEW DATA users menggunakan Joi
+const schemaPostUser = Joi.object({
+  username: Joi.string().required(),
+  password: Joi.string().required(),
+  name: Joi.string().required(),
+});
+
+
+//POST NEW DATA
+publicRouter.post('/api/users', async (req, res) => {
+  try {
+
+    // Validasi data masukan
+    const { error } = schemaPostUser.validate(req.body);
+    if (error) {
+      logger.error(`Validation Error: ${error.message}`);
+      return res.status(400).send(error.details[0].message);
+    }
+
+    // Data valid, lanjutkan proses
+    const { username, password, name } = req.body;
+    await query('INSERT INTO users (username,password,name) VALUES (?, ?, ?)', [username, password, name]);
+    const rows = await query('SELECT * FROM users WHERE username = ?', [username]);
+    logger.info(`POST NEW DATA: ${JSON.stringify(rows)}`);
+    res.status(201).send('Data inserted successfully');
+  } catch (error) {
+    logger.error(`Error: ${error.message}`);
+    res.status(500).send('Internal Server Error');
+  }
+});
+```
+
+- test validasi
