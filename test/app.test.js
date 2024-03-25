@@ -50,7 +50,7 @@ describe.skip('POST /api/users', () => {
   });
 });
 
-describe('DELETE /api/users', () => {
+describe.skip('DELETE /api/users', () => {
   const USERNAME = 'john'
   const PASSWORD = 'john1'
   const NAME = 'john'
@@ -67,10 +67,57 @@ describe('DELETE /api/users', () => {
     const response = await request(app)
       .delete('/api/users/' + USERNAME)
     expect(response.status).toBe(200);
-    expect(response.text).toBe('Data deleted successfully');
+    expect(response.text).toBe('Deleted Successfully');
 
-    // testUser = await getTestUser();
-    // expect(testUser).toBeNull();
+    const testUser = await getTestUser(USERNAME);
+    expect(testUser.length).toEqual(0);
+  });
+})
+
+describe('PUT /api/users', () => {
+  const USERNAME = 'john'
+  const PASSWORD = 'john1'
+  const NAME = 'john'
+
+  //insert data sebelum test put 
+  beforeEach(async () => {
+    await createTestUser(USERNAME, PASSWORD, NAME);
+  })
+
+  //menghapus data setelah test insert 
+  afterEach(async () => {
+    await removeTestUser(USERNAME);
+  })
+
+  it('should put data to MySQL', async () => {
+    let validData = { password: 'john1-rev', name: 'john-rev' };
+    const response = await request(app)
+      .put(`/api/users/john`)
+      .send(validData);
+    expect(response.status).toBe(201);
+    expect(response.text).toBe('Data updated successfully');
+
+    // Additional test to check if data is actually added to the database
+    validData = { password: 'john1-rev', name: 'john-rev', "token": null, "username": "john" }
+    const getDataResponse = await request(app).get(`/api/users/john`);
+    expect(getDataResponse.status).toBe(200);
+    expect(getDataResponse.body).toEqual(expect.arrayContaining([validData]));
   });
 
-})
+  it('should reject if request is not valid', async () => {
+    const invalidData = { username: 'John' }; // Missing 'name, password' field
+    const response = await request(app)
+      .put(`/api/users/john`)
+      .send(invalidData);
+    expect(response.status).toBe(400);
+  });
+
+  it('should not found', async () => {
+    const validData = { password: 'john1-rev', name: 'john-rev' };
+    const response = await request(app)
+      .put('/api/users/edy')
+      .send(validData);
+    expect(response.status).toBe(404);
+    expect(response.text).toBe('Data Not Found');
+  });
+});

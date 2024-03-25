@@ -1,0 +1,48 @@
+### 
+GET http://localhost:3000
+
+### 
+GET http://localhost:3000/api/users
+
+### POST Tanpa Body
+POST http://localhost:3000/api/users
+
+### POST 
+POST http://localhost:3000/api/users
+content-type: application/json
+
+{
+  "username": "john",
+  "password": "password",
+  "name": "John"
+}
+
+### DELETE tidak ketemu
+DELETE http://localhost:3000/api/users/edy
+
+### DELETE
+DELETE http://localhost:3000/api/users/john
+
+### PUT tidak ketemu
+PUT http://localhost:3000/api/users/edy
+content-type: application/json
+
+{
+  "password": "password",
+  "name": "edy"
+}
+
+### PUT tidak sesuai body
+PUT http://localhost:3000/api/users/john
+
+### PUT tidak ketemu
+PUT http://localhost:3000/api/users/john
+content-type: application/json
+
+{
+  "password": "password-rev",
+  "name": "john-rev"
+}
+
+### 
+GET http://localhost:3000/api/users/john
